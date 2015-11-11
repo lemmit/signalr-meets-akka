@@ -24,10 +24,12 @@ namespace SignalRMeetsAkka.Hubs
         {
             var message = _mapper.Map(obj, messageTypeName);
             var fullPath = CreateFullPath(path);
-            var result = _actorSystem.ActorSelection(fullPath)
-                                     .Ask(message).Result;
-            //hub.client.tell does not work, beware
-            Clients.Caller.answer(result, messageId);
+            var caller = Clients.Caller;
+            _actorSystem.ActorSelection(fullPath)
+                .Ask(message).ContinueWith((result) =>
+                {
+                    caller.answer(result, messageId);
+                });
         }
     }
 }
